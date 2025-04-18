@@ -1,5 +1,12 @@
+import logging
+
+# Suppress debug and info logs from specific libraries
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("gradio").setLevel(logging.WARNING)
+logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
+
 import torch
-from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
+from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler, StableDiffusionImg2ImgPipeline
 from PIL import Image
 import os
 
@@ -13,7 +20,7 @@ class StableDiffusionGenerator:
             use_gpu (bool): Whether to use GPU for inference
         """
         self.model_id = model_id
-        self.device = "cuda" if use_gpu and torch.cuda.is_available() else "cpu"
+        self.device = "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")
         
         print(f"Loading model {model_id} on {self.device}...")
         self.pipe = StableDiffusionPipeline.from_pretrained(
@@ -29,8 +36,21 @@ class StableDiffusionGenerator:
         self.pipe = self.pipe.to(self.device)
         print("Model loaded successfully!")
         
+        # Initialize img2img pipeline
+        self.img2img_pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+            model_id,
+            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
+        )
+        self.img2img_pipe = self.img2img_pipe.to(self.device)
+
+        print("Img2Img pipeline loaded successfully!")
+
         # Create output directory
         os.makedirs("output", exist_ok=True)
+        
+        # Disable safety checker to allow NSFW images
+        self.pipe.safety_checker = None
+        self.img2img_pipe.safety_checker = None
     
     def generate_image(
         self, 
@@ -40,7 +60,8 @@ class StableDiffusionGenerator:
         guidance_scale=7.5,
         width=512, 
         height=512,
-        seed=None
+        seed=None,
+        init_image=None
     ):
         """
         Generate an image based on the provided prompt
@@ -53,6 +74,7 @@ class StableDiffusionGenerator:
             width (int): Image width
             height (int): Image height
             seed (int): Random seed for reproducibility
+            init_image (PIL.Image or None): Initial image to guide generation
             
         Returns:
             PIL.Image: Generated image
@@ -61,18 +83,59 @@ class StableDiffusionGenerator:
         generator = None
         if seed is not None:
             generator = torch.Generator(device=self.device).manual_seed(seed)
-            
+
+        # Ensure init_image is converted to a PIL.Image if not already
+        if init_image is not None and not isinstance(init_image, Image.Image):
+            init_image = Image.open(init_image)
+            init_image = init_image.convert("RGB")  # Convert to RGB mode to ensure compatibility
+
+        # Resize the init_image to match the specified dimensions without distortion
+        if init_image is not None:
+            original_width, original_height = init_image.size
+            aspect_ratio = original_width / original_height
+
+            if aspect_ratio > width / height:
+                new_width = width
+                new_height = int(width / aspect_ratio)
+            else:
+                new_height = height
+                new_width = int(height * aspect_ratio)
+
+            init_image = init_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+            # Create a new image with the target dimensions and paste the resized image onto it
+            padded_image = Image.new("RGB", (width, height), (0, 0, 0))  # Black padding
+            paste_x = (width - new_width) // 2
+            paste_y = (height - new_height) // 2
+            padded_image.paste(init_image, (paste_x, paste_y))
+            init_image = padded_image
+
+        # Ensure minimal changes to the original image by adjusting parameters
+        guidance_scale = 3.0  # Lower value to reduce prompt influence
+        strength = 0.4  # Lower value to preserve more of the original image
+
         # Generate the image
-        result = self.pipe(
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            num_inference_steps=num_inference_steps,
-            guidance_scale=guidance_scale,
-            width=width,
-            height=height,
-            generator=generator
-        )
-        
+        if init_image is not None:
+            result = self.img2img_pipe(
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+                num_inference_steps=num_inference_steps,
+                guidance_scale=guidance_scale,
+                image=init_image,
+                strength=strength,  # Use the adjusted strength parameter
+                generator=generator
+            )
+        else:
+            result = self.pipe(
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+                num_inference_steps=num_inference_steps,
+                guidance_scale=guidance_scale,
+                width=width,
+                height=height,
+                generator=generator
+            )
+
         return result.images[0]
     
     def save_image(self, image, filename=None):
