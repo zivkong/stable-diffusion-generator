@@ -10,6 +10,9 @@ from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler, Stab
 from PIL import Image
 import os
 
+# Import the configuration file
+from .config import MAX_SEED_VALUE, DEFAULT_STEPS, DEFAULT_GUIDANCE_SCALE, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_STRENGTH
+
 class StableDiffusionGenerator:
     def __init__(self, model_id="runwayml/stable-diffusion-v1-5", use_gpu=True):
         """
@@ -56,13 +59,13 @@ class StableDiffusionGenerator:
         self, 
         prompt, 
         negative_prompt="", 
-        num_inference_steps=30,
-        guidance_scale=7.5,
-        width=512, 
-        height=512,
+        num_inference_steps=DEFAULT_STEPS,
+        guidance_scale=DEFAULT_GUIDANCE_SCALE,
+        width=DEFAULT_WIDTH, 
+        height=DEFAULT_HEIGHT,
         seed=None,
         init_image=None,
-        strength=0.75  # Default value for strength
+        strength=DEFAULT_STRENGTH  # Default value for strength
     ):
         """
         Generate an image based on the provided prompt

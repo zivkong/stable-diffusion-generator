@@ -6,7 +6,7 @@ Stable Diffusion Generator/
 
 ## Project Structure
 ```
-AIImage/
+./
 ├── requirements.txt       # Python dependencies
 ├── data/                  # Data storage (e.g., logs, input prompts)
 │   └── prompt_log.json    # Log of prompts used for image generation
@@ -50,13 +50,18 @@ AIImage/
    ```bash
    pip install -r requirements.txt
    ```
+4. Create a `.env` file in the project root and specify the address and port:
+   ```env
+   UI_ADDRESS=127.0.0.1
+   UI_ADDRESS=8000
+   ```
 
 ### Running the Project
 1. Start the web UI:
    ```bash
    python src/ui/web_ui.py
    ```
-2. Access the interface in your browser at `http://localhost:7860` (default Gradio port).
+2. Access the interface in your browser at the address and port specified in the `.env` file.
 
 ### Future Development
 - **Logging**: Enhance logging to include more detailed metrics and error tracking.
@@ -67,14 +72,4 @@ AIImage/
 - Always update this README file with any changes to the project structure, features, or development guidelines.
 
 ## Notes for AI Assistants
-This documentation is structured to help AI systems understand the project for future development. Key files, functions, and their purposes are outlined to facilitate quick onboarding and efficient assistance.
-
-### Environment Configuration
-The project uses a `.env` file to configure environment variables. Below is an example of the `.env` file content:
-
-```env
-SERVER_NAME=127.0.0.1
-SERVER_PORT=8000
-```
-
-Ensure you create or update this file with the appropriate values before running the project.
+For detailed notes and guidelines tailored for AI systems, please refer to the [GUIDELINES.md](./GUIDELINES.md) file.

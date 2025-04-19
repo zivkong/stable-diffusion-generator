@@ -14,6 +14,9 @@ from PIL import Image
 import numpy as np
 import io
 
+# Import the configuration file
+from generator.config import MAX_SEED_VALUE, DEFAULT_WIDTH, DEFAULT_HEIGHT
+
 # Determine the best available device for computation
 def get_device():
     if torch.backends.mps.is_available():
@@ -24,7 +27,7 @@ def get_device():
         return torch.device("cpu")
 
 # Update the generator to use the appropriate device
-def generate_image(prompt, negative_prompt, steps, guidance_scale, width, height, seed, use_random_seed, uploaded_image, strength):
+def generate_image(prompt, negative_prompt, steps, guidance_scale, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, seed=None, use_random_seed=False, uploaded_image=None, strength=0.75):
     import random
     from generator.sd_generator import StableDiffusionGenerator
 
@@ -33,7 +36,7 @@ def generate_image(prompt, negative_prompt, steps, guidance_scale, width, height
     generator = StableDiffusionGenerator(use_gpu=use_gpu)  # Pass use_gpu instead of device
 
     if use_random_seed:
-        seed = random.randint(0, 2147483647)
+        seed = random.randint(0, MAX_SEED_VALUE)
     elif seed:
         seed = int(seed)
     else:
