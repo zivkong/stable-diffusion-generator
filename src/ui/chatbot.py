@@ -77,8 +77,8 @@ def advanced_chatbot(message, history, negative_prompt, steps, guidance_scale, w
 
     # Compose response
     response = f"Here is your image for: '{prompt}'\nSeed: {seed if seed is not None else 'N/A'}"
-    # Return text and image as separate chat messages (as strings/paths)
-    return [response, image_path]
+    # Return both the image and the text as separate chat messages
+    return [image_path, response]
 
 # Define advanced controls as tools for the chat
 advanced_tools = [
