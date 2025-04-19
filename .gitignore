@@ -58,3 +58,4 @@ output/
 # Models
 data/
 models/
+.env
