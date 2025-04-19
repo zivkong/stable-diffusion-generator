@@ -1,7 +1,8 @@
-# AIImage Project
+# Stable Diffusion Generator Project
 
-## Overview
-AIImage is a project designed to generate and manipulate images using advanced AI models, such as Stable Diffusion. The project includes a generator module for creating images and a web-based user interface for interacting with the system.
+Stable Diffusion Generator is a project designed to generate and manipulate images using advanced AI models, such as Stable Diffusion. The project includes a generator module for creating images and a web-based user interface for interacting with the system.
+
+Stable Diffusion Generator/
 
 ## Project Structure
 ```
