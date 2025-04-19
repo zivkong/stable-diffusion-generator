@@ -87,20 +87,20 @@ advanced_tools = [
     gr.Slider(1.0, 20.0, value=7.5, step=0.1, label="Guidance Scale", interactive=True),
     gr.Slider(256, 1024, value=512, step=64, label="Width", interactive=True),
     gr.Slider(256, 1024, value=512, step=64, label="Height", interactive=True),
+    gr.Slider(0.0, 1.0, value=0.75, step=0.01, label="Strength", interactive=True),
     gr.Number(label="Seed", value=None, interactive=True),
     gr.Checkbox(label="Use Random Seed", value=False, interactive=True),
-    gr.Image(type="filepath", label="Uploaded Image", interactive=True),
-    gr.Slider(0.0, 1.0, value=0.75, step=0.01, label="Strength", interactive=True)
+    gr.Image(type="filepath", label="Uploaded Image", interactive=True)
 ]
 
 # Create the advanced Gradio ChatInterface
 chatbot = gr.ChatInterface(
     fn=advanced_chatbot,
     additional_inputs=advanced_tools,
-    additional_inputs_accordion="Advanced Controls",
+    additional_inputs_accordion=(gr.Accordion(label="Advanced Control", open=False)),
     examples=[
-        ["A futuristic cityscape at sunset", "", 10, 7.5, 512, 512, None, True, None, 0.75],
-        ["A cat riding a bicycle", "blurry, distorted", 40, 10.0, 512, 512, 12345, False, None, 0.7]
+        ["A futuristic cityscape at sunset", "", 10, 7.5, 512, 512, 0.75, None, True, None],
+        ["A cat riding a bicycle", "blurry, distorted", 40, 10.0, 512, 512, 0.7, 12345, False, None]
     ],
     title="Stable Diffusion Chatbot",
     description="Chat with the Stable Diffusion bot! Type your prompt and optionally adjust advanced parameters using the controls below."

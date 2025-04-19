@@ -43,12 +43,28 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Run the Application
+### 3. Run the Application (with Hot Reload)
 Ensure the Python virtual environment is set up and the required dependencies are installed. Then run:
+
 ```bash
 uvicorn src.ui.app:app --reload
 ```
-This will start the FastAPI server for the web-based user interface. You can access it in your browser at `http://127.0.0.1:8000`.
+
+This will start the FastAPI server with your Gradio UI, and automatically reload the server when you make changes to your code.
+
+You can also run the app directly with Python (not recommended for hot reload):
+
+```bash
+python src/ui/app.py
+```
+
+---
+
+## Environment Variables
+- `UI_ADDRESS`: Set the host address (default: 127.0.0.1)
+- `UI_PORT`: Set the port (default: 8000)
+
+You can create a `.env` file in the project root to override these defaults.
 
 ---
 

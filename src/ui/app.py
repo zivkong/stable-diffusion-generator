@@ -24,5 +24,11 @@ port = int(os.getenv("UI_PORT", DEFAULT_PORT))
 
 if __name__ == "__main__":
     import uvicorn
-    logging.info(f"Starting server at {host}:{port}")
-    uvicorn.run(app, host=host, port=port)
+    logging.info(f"Starting server at {host}:{port} with reload enabled")
+    uvicorn.run(
+        "src.ui.app:app",
+        host=host,
+        port=port,
+        reload=True,
+        factory=False
+    )
