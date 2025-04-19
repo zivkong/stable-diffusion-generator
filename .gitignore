@@ -58,6 +58,3 @@ output/
 # Models
 data/
 models/
-
-# Exclude the .env folder
-.env/
