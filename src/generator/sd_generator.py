@@ -61,7 +61,8 @@ class StableDiffusionGenerator:
         width=512, 
         height=512,
         seed=None,
-        init_image=None
+        init_image=None,
+        strength=0.75  # Default value for strength
     ):
         """
         Generate an image based on the provided prompt
@@ -75,6 +76,7 @@ class StableDiffusionGenerator:
             height (int): Image height
             seed (int): Random seed for reproducibility
             init_image (PIL.Image or None): Initial image to guide generation
+            strength (float): Strength of the transformation when using an initial image
             
         Returns:
             PIL.Image: Generated image
@@ -88,6 +90,12 @@ class StableDiffusionGenerator:
         if init_image is not None and not isinstance(init_image, Image.Image):
             init_image = Image.open(init_image)
             init_image = init_image.convert("RGB")  # Convert to RGB mode to ensure compatibility
+
+        # Use the strength parameter in the image generation process (if applicable)
+        # This is a placeholder for actual implementation logic
+        if init_image is not None:
+            # Example: Adjust the strength parameter in the pipeline
+            pass
 
         # Resize the init_image to match the specified dimensions without distortion
         if init_image is not None:

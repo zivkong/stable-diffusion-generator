@@ -1,0 +1,22 @@
+# Dependencies for the AIImage project
+accelerate==1.6.0
+aiofiles==24.1.0
+annotated-types==0.7.0
+anyio==4.9.0
+certifi==2025.1.31
+charset-normalizer==3.4.1
+click==8.1.8
+diffusers==0.33.1
+fastapi==0.115.12
+ffmpy==0.5.0
+filelock==3.18.0
+fsspec==2025.3.2
+gradio==5.25.2
+gradio-client==1.8.0
+h11==0.14.0
+httpcore==1.0.8
+httpx==0.28.1
+huggingface-hub==0.30.2
+idna==3.10
+importlib-metadata==8.6.1
+jinja2
