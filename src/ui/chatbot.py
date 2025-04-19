@@ -28,14 +28,21 @@ def get_device():
         logging.debug("MPS not available. Falling back to CPU.")
         return torch.device("cpu")
 
-# Update the generator to use the appropriate device
-def generate_image(prompt, negative_prompt, steps, guidance_scale, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, seed=None, use_random_seed=False, uploaded_image=None, strength=0.75):
+# --- Advanced Chatbot Implementation ---
+
+def advanced_chatbot(message, history, negative_prompt, steps, guidance_scale, width, height, seed, use_random_seed, uploaded_image, strength):
+    """
+    Chatbot function for Gradio's ChatInterface. Accepts a message and advanced parameters.
+    """
     import random
-
     device = get_device()
-    use_gpu = device.type != "cpu"  # Determine if GPU should be used
-    generator = StableDiffusionGenerator(use_gpu=use_gpu)  # Pass use_gpu instead of device
+    use_gpu = device.type != "cpu"
+    generator = StableDiffusionGenerator(use_gpu=use_gpu)
 
+    # Use the message as the main prompt
+    prompt = message
+
+    # Handle random seed
     if use_random_seed:
         seed = random.randint(0, MAX_SEED_VALUE)
     elif seed:
@@ -43,11 +50,11 @@ def generate_image(prompt, negative_prompt, steps, guidance_scale, width=DEFAULT
     else:
         seed = None
 
-    # If an image is uploaded, use it as an initial input
+    # Prepare init_image if uploaded
     init_image = None
-    if uploaded_image is not None:
+    if isinstance(uploaded_image, str) and os.path.isfile(uploaded_image):
         init_image = Image.open(uploaded_image).convert("RGB")
-        init_image = init_image.resize((width, height))  # Resize to match generation dimensions
+        init_image = init_image.resize((width, height))
 
     # Generate the image
     image = generator.generate_image(
@@ -58,37 +65,45 @@ def generate_image(prompt, negative_prompt, steps, guidance_scale, width=DEFAULT
         width=width,
         height=height,
         seed=seed,
-        init_image=init_image,  # Pass processed init_image
-        strength=strength  # Pass the strength parameter
+        init_image=init_image,
+        strength=strength
     )
-
-    # Enhance the image after generation
     enhancer = ImageEnhance.Sharpness(image)
-    image = enhancer.enhance(1.5)  # Increase sharpness by 1.5x
+    image = enhancer.enhance(1.5)
 
-    return image, str(seed) if seed else ""
+    # Save image to output directory for chat history
+    image_path = os.path.join(os.path.dirname(__file__), f"../../output/chat_{random.randint(0, 10_000_000_000)}.png")
+    image.save(image_path)
 
-# Create a Gradio interface for the image generation
-chatbot = gr.Interface(
-    fn=generate_image,
-    inputs=[
-        gr.Textbox(label="Prompt"),
-        gr.Textbox(label="Negative Prompt"),
-        gr.Slider(1, 100, step=1, label="Steps"),
-        gr.Slider(1.0, 20.0, step=0.1, label="Guidance Scale"),
-        gr.Slider(256, 1024, step=64, label="Width"),
-        gr.Slider(256, 1024, step=64, label="Height"),
-        gr.Number(label="Seed"),
-        gr.Checkbox(label="Use Random Seed"),
-        gr.Image(type="filepath", label="Uploaded Image"),
-        gr.Slider(0.0, 1.0, step=0.01, label="Strength")
+    # Compose response
+    response = f"Here is your image for: '{prompt}'\nSeed: {seed if seed is not None else 'N/A'}"
+    # Return text and image as separate chat messages (as strings/paths)
+    return [response, image_path]
+
+# Define advanced controls as tools for the chat
+advanced_tools = [
+    gr.Textbox(label="Negative Prompt", value="", interactive=True),
+    gr.Slider(1, 100, value=30, step=1, label="Steps", interactive=True),
+    gr.Slider(1.0, 20.0, value=7.5, step=0.1, label="Guidance Scale", interactive=True),
+    gr.Slider(256, 1024, value=512, step=64, label="Width", interactive=True),
+    gr.Slider(256, 1024, value=512, step=64, label="Height", interactive=True),
+    gr.Number(label="Seed", value=None, interactive=True),
+    gr.Checkbox(label="Use Random Seed", value=False, interactive=True),
+    gr.Image(type="filepath", label="Uploaded Image", interactive=True),
+    gr.Slider(0.0, 1.0, value=0.75, step=0.01, label="Strength", interactive=True)
+]
+
+# Create the advanced Gradio ChatInterface
+chatbot = gr.ChatInterface(
+    fn=advanced_chatbot,
+    additional_inputs=advanced_tools,
+    additional_inputs_accordion="Advanced Controls",
+    examples=[
+        ["A futuristic cityscape at sunset", "", 30, 7.5, 512, 512, None, True, None, 0.75],
+        ["A cat riding a bicycle", "blurry, distorted", 40, 10.0, 512, 512, 12345, False, None, 0.7]
     ],
-    outputs=[
-        gr.Image(label="Generated Image"),
-        gr.Textbox(label="Seed")
-    ],
-    title="Stable Diffusion Image Generator",
-    description="Generate images using Stable Diffusion with customizable parameters."
+    title="Stable Diffusion Chatbot",
+    description="Chat with the Stable Diffusion bot! Type your prompt and optionally adjust advanced parameters using the controls below."
 )
 
 # Export the Gradio interface for external use
