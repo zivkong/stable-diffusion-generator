@@ -2,6 +2,8 @@
 
 Stable Diffusion Generator is a project designed to generate and manipulate images using advanced AI models, such as Stable Diffusion. The project includes a generator module for creating images and a web-based user interface for interacting with the system.
 
+---
+
 ## Project Structure
 ```
 ./
@@ -15,44 +17,70 @@ Stable Diffusion Generator is a project designed to generate and manipulate imag
 ├── output/                # Generated images and logs
 ├── src/                   # Source code
 │   ├── generator/         # Image generation logic
-│   │   ├── __init__.py
 │   │   ├── config.py      # Configuration for the generator
 │   │   └── sd_generator.py
 │   ├── ui/                # Web-based user interface
-│   │   ├── __init__.py
 │   │   ├── uvicorn_config.py # Uvicorn configuration for FastAPI
 │   │   ├── web_ui.py      # Gradio-based web interface
 │   │   └── static/        # Static files (e.g., fonts, images)
 ├── tests/                 # Unit tests
-│   └── test_sd_generator.py
 ```
+
+---
 
 ## Setup Instructions
 
-1. **Clone the Repository**
-   ```bash
-   git clone <repository-url>
-   cd AIImage
-   ```
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd AIImage
+```
 
-2. **Set Up the Virtual Environment**
-   ```bash
-   python3 -m venv env
-   source env/bin/activate
-   pip install -r requirements.txt
-   ```
+### 2. Set Up the Virtual Environment
+```bash
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+```
 
-3. **Run the Application**
-   Use the following command to start the Uvicorn server:
-   ```bash
-   PYTHONPATH=$(pwd) uvicorn src.ui.uvicorn_config:app --reload
-   ```
-   The application will be available at `http://127.0.0.1:8000`.
+### 3. Run the Application
+#### Start the Electron App
+Ensure the Python virtual environment is set up and the required dependencies are installed. Then run:
+```bash
+npm start
+```
+This will launch the Electron app and start the Python server.
+
+---
 
 ## Key Components
 
-- **Generator Module**: Contains the logic for generating images using Stable Diffusion. Configurations are defined in `config.py`, and the main generation logic is in `sd_generator.py`.
-- **Web UI**: A Gradio-based interface for interacting with the generator. It is integrated with FastAPI for hot reloading and additional API capabilities.
+### Generator Module
+- **Purpose**: Handles the logic for generating images using Stable Diffusion.
+- **Files**:
+  - `config.py`: Contains configuration settings for the generator.
+  - `sd_generator.py`: Implements the main image generation logic.
+
+### Web UI
+- **Purpose**: Provides a Gradio-based interface for interacting with the generator.
+- **Integration**: Built with FastAPI for additional API capabilities and hot reloading.
+- **Files**:
+  - `web_ui.py`: Main script for the Gradio-based web interface.
+  - `uvicorn_config.py`: Configuration for running the FastAPI server.
+
+### Electron Integration
+- **Purpose**: Offers a desktop application interface for the Stable Diffusion Generator.
+- **Features**:
+  - Launches an Electron window to load the web-based UI served by the Python server.
+  - Automatically starts the Python server when the Electron app is launched.
+  - Includes debugging tools such as logging and DevTools.
+- **Workflow**:
+  1. Activates the Python virtual environment.
+  2. Starts the Python server (`web_ui.py`).
+  3. Loads the UI in the Electron window from `http://127.0.0.1:8000`.
+  4. Terminates the Python server when the app is closed.
+
+---
 
 ## Notes
 
