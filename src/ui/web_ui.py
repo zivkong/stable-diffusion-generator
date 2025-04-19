@@ -120,14 +120,22 @@ mount_gradio_app(app, interface, path="/")
 
 # Serve static files (fonts, etc.)
 static_path = os.path.join(os.path.dirname(__file__), "static")
+logging.debug(f"Expected static directory path: {static_path}")
 if os.path.exists(static_path):
+    logging.debug(f"Static directory found at: {static_path}")
     app.mount("/static", StaticFiles(directory=static_path), name="static")
+else:
+    logging.error("Static directory not found. Ensure the 'static' folder exists and contains the required files.")
 
 # Serve manifest.json at the root
 from fastapi.responses import FileResponse
 @app.get("/manifest.json")
 def manifest():
     manifest_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../manifest.json'))
+    logging.debug(f"Checking for manifest.json at: {manifest_path}")
+    if not os.path.exists(manifest_path):
+        logging.error("manifest.json file not found at the specified path.")
+        return {"error": "manifest.json not found"}, 404
     return FileResponse(manifest_path, media_type="application/json")
 
 import dotenv
