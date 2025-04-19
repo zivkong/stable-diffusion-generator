@@ -44,12 +44,11 @@ pip install -r requirements.txt
 ```
 
 ### 3. Run the Application
-#### Start the Electron App
 Ensure the Python virtual environment is set up and the required dependencies are installed. Then run:
 ```bash
-npm start
+uvicorn src.ui.app:app --reload
 ```
-This will launch the Electron app and start the Python server.
+This will start the FastAPI server for the web-based user interface. You can access it in your browser at `http://127.0.0.1:8000`.
 
 ---
 

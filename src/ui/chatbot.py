@@ -1,11 +1,11 @@
-import sys
 import os
-# Ensure the 'src' directory is in the Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import logging
 import torch
+import gradio as gr
+
+from PIL import Image, ImageEnhance
+from src.generator.config import MAX_SEED_VALUE, DEFAULT_WIDTH, DEFAULT_HEIGHT
+from src.generator.sd_generator import StableDiffusionGenerator
 
 # Update logging to write to a file for persistent debugging
 log_file_path = os.path.join(os.path.dirname(__file__), '../../output/logs.log')
@@ -19,14 +19,6 @@ logging.basicConfig(
 )
 logging.debug("Logging setup updated to write to file.")
 
-import gradio as gr
-from PIL import Image
-import numpy as np
-import io
-
-# Import the configuration file
-from generator.config import MAX_SEED_VALUE, DEFAULT_WIDTH, DEFAULT_HEIGHT
-
 # Determine the best available device for computation
 def get_device():
     if torch.backends.mps.is_available():
@@ -39,7 +31,6 @@ def get_device():
 # Update the generator to use the appropriate device
 def generate_image(prompt, negative_prompt, steps, guidance_scale, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT, seed=None, use_random_seed=False, uploaded_image=None, strength=0.75):
     import random
-    from generator.sd_generator import StableDiffusionGenerator
 
     device = get_device()
     use_gpu = device.type != "cpu"  # Determine if GPU should be used
@@ -71,21 +62,14 @@ def generate_image(prompt, negative_prompt, steps, guidance_scale, width=DEFAULT
         strength=strength  # Pass the strength parameter
     )
 
-    # Add post-processing to enhance the generated image
-    from PIL import ImageEnhance
-
     # Enhance the image after generation
     enhancer = ImageEnhance.Sharpness(image)
     image = enhancer.enhance(1.5)  # Increase sharpness by 1.5x
 
-    # Add debugging logs to trace the outputs of the generate_image function
-    logging.debug(f"Generated image: {image}")
-    logging.debug(f"Generated seed: {seed}")
-
     return image, str(seed) if seed else ""
 
 # Create a Gradio interface for the image generation
-interface = gr.Interface(
+chatbot = gr.Interface(
     fn=generate_image,
     inputs=[
         gr.Textbox(label="Prompt"),
@@ -107,51 +91,5 @@ interface = gr.Interface(
     description="Generate images using Stable Diffusion with customizable parameters."
 )
 
-# Add FastAPI integration for hot reload
-from fastapi import FastAPI
-from gradio.routes import mount_gradio_app
-
-# Create a FastAPI app
-app = FastAPI()
-
-# Mount the Gradio interface to the FastAPI app
-mount_gradio_app(app, interface, path="/")
-
-# Serve manifest.json at the root
-from fastapi.responses import FileResponse
-@app.get("/manifest.json")
-def manifest():
-    manifest_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../manifest.json'))
-    logging.debug(f"Checking for manifest.json at: {manifest_path}")
-    if not os.path.exists(manifest_path):
-        logging.error("manifest.json file not found at the specified path.")
-        return {"error": "manifest.json not found"}, 404
-    return FileResponse(manifest_path, media_type="application/json")
-
-import dotenv
-
-# Load environment variables from .env file
-dotenv.load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
-
-# Define default values for host and port
-DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = 8000
-
-# Update the host and port to use environment variables
-host = os.getenv("UI_ADDRESS", DEFAULT_HOST)
-port = int(os.getenv("UI_PORT", DEFAULT_PORT))
-
-# Add detailed logging for debugging
-logging.debug("Loading environment variables from .env file.")
-if not os.path.exists(os.path.join(os.path.dirname(__file__), '../../.env')):
-    logging.error(".env file not found at the specified path.")
-else:
-    logging.debug(".env file found and loaded successfully.")
-
-logging.debug(f"Host: {host}, Port: {port}")
-logging.debug("Starting the FastAPI application with Uvicorn.")
-
-# Run the app with uvicorn for hot reload
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("src.ui.web_ui:app", host=host, port=port, reload=True)
+# Export the Gradio interface for external use
+__all__ = ['chatbot']
