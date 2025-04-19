@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", message="resource_tracker: There appear to be.*semaphore objects.*", category=UserWarning)
+
 import os
 import logging
 import torch
@@ -93,10 +96,10 @@ def advanced_chatbot(message, history, negative_prompt, steps, guidance_scale, w
 advanced_tools = [
     gr.Textbox(label="Negative Prompt", value="", interactive=True),
     gr.Slider(1, 100, value=10, step=1, label="Steps", interactive=True),
-    gr.Slider(1.0, 20.0, value=5, step=1, label="Guidance Scale", interactive=True),
+    gr.Slider(1.0, 50, value=10, step=1, label="Guidance Scale", interactive=True),
     gr.Slider(256, 1024, value=512, step=64, label="Width", interactive=True),
     gr.Slider(256, 1024, value=512, step=64, label="Height", interactive=True),
-    gr.Slider(0.0, 1.0, value=0.8, step=0.01, label="Strength", interactive=True),
+    gr.Slider(0.0, 1.0, value=0.5, step=0.01, label="Strength", interactive=True),
     gr.Image(type="filepath", label="Uploaded Image", interactive=True)
 ]
 
