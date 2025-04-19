@@ -5,19 +5,19 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import logging
 import torch
 
-# Set up logging to capture debug information
+# Set up logging to capture detailed debug information
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-logging.debug("Starting the web_ui.py script...")
+logging.debug("web_ui.py script initialized.")
 
 import gradio as gr
 from PIL import Image
 import numpy as np
 import io
 
-# Check if MPS (Metal Performance Shaders) is available for GPU acceleration
+# Determine the best available device for computation
 def get_device():
     if torch.backends.mps.is_available():
-        logging.debug("Using MPS for GPU acceleration.")
+        logging.debug("MPS (Metal Performance Shaders) is available and will be used for GPU acceleration.")
         return torch.device("mps")
     else:
         logging.debug("MPS not available. Falling back to CPU.")
@@ -92,4 +92,6 @@ interface = gr.Interface(
 
 # Launch the Gradio interface
 if __name__ == "__main__":
-    interface.launch(server_name="127.0.0.1", server_port=8000)
+    server_name = os.getenv("SERVER_NAME", "127.0.0.1")
+    server_port = int(os.getenv("SERVER_PORT", 8000))
+    interface.launch(server_name=server_name, server_port=server_port)

@@ -1,6 +1,6 @@
 import logging
 
-# Suppress debug and info logs from specific libraries
+# Configure logging to suppress less critical logs from libraries
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("gradio").setLevel(logging.WARNING)
 logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
@@ -13,11 +13,11 @@ import os
 class StableDiffusionGenerator:
     def __init__(self, model_id="runwayml/stable-diffusion-v1-5", use_gpu=True):
         """
-        Initialize Stable Diffusion generator with specified model
-        
+        Initialize the Stable Diffusion generator.
+
         Args:
-            model_id (str): HuggingFace model ID
-            use_gpu (bool): Whether to use GPU for inference
+            model_id (str): The HuggingFace model ID to use.
+            use_gpu (bool): Whether to enable GPU for faster inference.
         """
         self.model_id = model_id
         self.device = "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")

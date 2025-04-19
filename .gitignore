@@ -58,3 +58,6 @@ output/
 # Models
 data/
 models/
+
+# Ignore environment configuration file
+.env
