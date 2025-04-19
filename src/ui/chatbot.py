@@ -77,8 +77,8 @@ def advanced_chatbot(message, history, negative_prompt, steps, guidance_scale, w
 
     # Compose response
     response = f"Here is your image for: '{prompt}'\nSeed: {seed if seed is not None else 'N/A'}"
-    # Return both the image and the text as separate chat messages
-    return [image_path, response]
+    # Return a dictionary for Gradio ChatInterface compatibility
+    return [{"text": response, "files": [image_path]}]
 
 # Define advanced controls as tools for the chat
 advanced_tools = [
@@ -99,7 +99,7 @@ chatbot = gr.ChatInterface(
     additional_inputs=advanced_tools,
     additional_inputs_accordion="Advanced Controls",
     examples=[
-        ["A futuristic cityscape at sunset", "", 30, 7.5, 512, 512, None, True, None, 0.75],
+        ["A futuristic cityscape at sunset", "", 10, 7.5, 512, 512, None, True, None, 0.75],
         ["A cat riding a bicycle", "blurry, distorted", 40, 10.0, 512, 512, 12345, False, None, 0.7]
     ],
     title="Stable Diffusion Chatbot",
