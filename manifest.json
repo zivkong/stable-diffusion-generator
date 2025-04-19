@@ -1,0 +1,9 @@
+{
+  "name": "Stable Diffusion Generator",
+  "short_name": "SD Generator",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "Generate images using Stable Diffusion.",
+  "icons": []
+}

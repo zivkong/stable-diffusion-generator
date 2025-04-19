@@ -110,12 +110,25 @@ interface = gr.Interface(
 # Add FastAPI integration for hot reload
 from fastapi import FastAPI
 from gradio.routes import mount_gradio_app
+from fastapi.staticfiles import StaticFiles
 
 # Create a FastAPI app
 app = FastAPI()
 
 # Mount the Gradio interface to the FastAPI app
 mount_gradio_app(app, interface, path="/")
+
+# Serve static files (fonts, etc.)
+static_path = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_path):
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+# Serve manifest.json at the root
+from fastapi.responses import FileResponse
+@app.get("/manifest.json")
+def manifest():
+    manifest_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../manifest.json'))
+    return FileResponse(manifest_path, media_type="application/json")
 
 import dotenv
 
