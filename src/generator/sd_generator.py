@@ -14,36 +14,65 @@ import os
 from .config import MAX_SEED_VALUE, DEFAULT_STEPS, DEFAULT_GUIDANCE_SCALE, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_STRENGTH
 
 class StableDiffusionGenerator:
-    def __init__(self, model_id="runwayml/stable-diffusion-v1-5", use_gpu=True):
+    def __init__(self, model_id=None, use_gpu=True):
         """
-        Initialize the Stable Diffusion generator.
+        Initialize the Stable Diffusion generator (local model preferred, download if missing).
 
         Args:
-            model_id (str): The HuggingFace model ID to use.
-            use_gpu (bool): Whether to enable GPU for faster inference.
+        model_id (str): The local path to the model directory or HuggingFace model id. If None, uses default local path.
+        use_gpu (bool): Whether to use GPU for inference.
         """
-        self.model_id = model_id
-        self.device = "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")
-        
-        print(f"Loading model {model_id} on {self.device}...")
-        self.pipe = StableDiffusionPipeline.from_pretrained(
-            model_id,
-            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
-        )
-        
+        # Define the local models directory and default model path
+        models_dir = os.path.join(os.path.dirname(__file__), "../../models/")
+        default_hf_id = "stabilityai/stable-diffusion-2-1-base"
+        default_local_model_path = os.path.join(models_dir, "stabilityai-stable-diffusion-2-1-base")
+        local_model_path = model_id if model_id is not None else default_local_model_path
+        hf_id = model_id if model_id is not None and ("/" in model_id) else default_hf_id
+
+        # If local model not found, download from HuggingFace
+        if not os.path.exists(local_model_path):
+            print(f"Local model not found at {local_model_path}. Downloading from HuggingFace ({hf_id})...")
+            self.pipeline = StableDiffusionPipeline.from_pretrained(hf_id, cache_dir=models_dir)
+            self.pipeline.save_pretrained(local_model_path)
+        else:
+            self.pipeline = StableDiffusionPipeline.from_pretrained(local_model_path, local_files_only=True)
+
+        # Set the device based on GPU (CUDA), Apple Silicon (MPS), or CPU
+        if use_gpu and torch.cuda.is_available():
+            self.device = "cuda"
+            torch_dtype = torch.float16
+        elif use_gpu and hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            self.device = "mps"
+            torch_dtype = torch.float16
+            print("Using Apple Silicon MPS acceleration.")
+        else:
+            self.device = "cpu"
+            torch_dtype = torch.float32
+            if use_gpu:
+                print("Warning: No GPU (CUDA or MPS) found. Running on CPU, which will be slow.")
+
+        self.pipeline.to(self.device, dtype=torch_dtype)
+
+        # Ensure self.pipe is properly initialized
+        self.pipe = self.pipeline
+
         # Use more efficient scheduler
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
             self.pipe.scheduler.config
         )
-        
         self.pipe = self.pipe.to(self.device)
         print("Model loaded successfully!")
-        
-        # Initialize img2img pipeline
-        self.img2img_pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
-            model_id,
-            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
-        )
+
+        # Initialize img2img pipeline from local only (download if missing)
+        if not os.path.exists(local_model_path):
+            self.img2img_pipe = StableDiffusionImg2ImgPipeline.from_pretrained(hf_id, cache_dir=models_dir, torch_dtype=torch.float16 if self.device == "cuda" else torch.float32)
+            self.img2img_pipe.save_pretrained(local_model_path)
+        else:
+            self.img2img_pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+                local_model_path,
+                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                local_files_only=True
+            )
         self.img2img_pipe = self.img2img_pipe.to(self.device)
 
         print("Img2Img pipeline loaded successfully!")

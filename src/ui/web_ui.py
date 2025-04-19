@@ -1,13 +1,23 @@
 import sys
 import os
+# Ensure the 'src' directory is in the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import logging
 import torch
 
-# Set up logging to capture detailed debug information
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-logging.debug("web_ui.py script initialized.")
+# Update logging to write to a file for persistent debugging
+log_file_path = os.path.join(os.path.dirname(__file__), '../../output/logs.log')
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file_path),
+        logging.StreamHandler()
+    ]
+)
+logging.debug("Logging setup updated to write to file.")
 
 import gradio as gr
 from PIL import Image
@@ -68,6 +78,10 @@ def generate_image(prompt, negative_prompt, steps, guidance_scale, width=DEFAULT
     enhancer = ImageEnhance.Sharpness(image)
     image = enhancer.enhance(1.5)  # Increase sharpness by 1.5x
 
+    # Add debugging logs to trace the outputs of the generate_image function
+    logging.debug(f"Generated image: {image}")
+    logging.debug(f"Generated seed: {seed}")
+
     return image, str(seed) if seed else ""
 
 # Create a Gradio interface for the image generation
@@ -93,8 +107,40 @@ interface = gr.Interface(
     description="Generate images using Stable Diffusion with customizable parameters."
 )
 
-# Launch the Gradio interface
+# Add FastAPI integration for hot reload
+from fastapi import FastAPI
+from gradio.routes import mount_gradio_app
+
+# Create a FastAPI app
+app = FastAPI()
+
+# Mount the Gradio interface to the FastAPI app
+mount_gradio_app(app, interface, path="/")
+
+import dotenv
+
+# Load environment variables from .env file
+dotenv.load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
+
+# Define default values for host and port
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8000
+
+# Update the host and port to use environment variables
+host = os.getenv("UI_ADDRESS", DEFAULT_HOST)
+port = int(os.getenv("UI_PORT", DEFAULT_PORT))
+
+# Add detailed logging for debugging
+logging.debug("Loading environment variables from .env file.")
+if not os.path.exists(os.path.join(os.path.dirname(__file__), '../../.env')):
+    logging.error(".env file not found at the specified path.")
+else:
+    logging.debug(".env file found and loaded successfully.")
+
+logging.debug(f"Host: {host}, Port: {port}")
+logging.debug("Starting the FastAPI application with Uvicorn.")
+
+# Run the app with uvicorn for hot reload
 if __name__ == "__main__":
-    server_name = os.getenv("SERVER_NAME", "127.0.0.1")
-    server_port = int(os.getenv("SERVER_PORT", 8000))
-    interface.launch(server_name=server_name, server_port=server_port)
+    import uvicorn
+    uvicorn.run("src.ui.web_ui:app", host=host, port=port, reload=True)

@@ -1,0 +1,11 @@
+# Recommended versions for Apple Silicon (MPS) support
+# These versions are known to work well as of April 2025
+# If you use a virtual environment, activate it before installing
+
+torch==2.2.0
+# torchvision is optional but recommended for image tasks
+# torchvision==0.17.0
+
+diffusers==0.33.1
+accelerate==1.6.0
+# The rest of your requirements remain unchanged

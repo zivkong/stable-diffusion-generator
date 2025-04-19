@@ -57,11 +57,22 @@ Stable Diffusion Generator/
    ```
 
 ### Running the Project
-1. Start the web UI:
+1. Start the web UI with Uvicorn (recommended):
+   ```bash
+   uvicorn src.ui.uvicorn_config:app --reload
+   ```
+   Or, for production:
+   ```bash
+   uvicorn src.ui.uvicorn_config:app --host 0.0.0.0 --port 8000
+   ```
+2. (Alternative) Start the web UI directly (for debugging):
    ```bash
    python src/ui/web_ui.py
    ```
-2. Access the interface in your browser at the address and port specified in the `.env` file.
+3. Access the interface in your browser at the address and port specified in the `.env` file (default: http://127.0.0.1:8000).
+
+### Logging
+- Logs are written to `output/logs.log` for debugging and monitoring purposes.
 
 ### Future Development
 - **Logging**: Enhance logging to include more detailed metrics and error tracking.
@@ -73,3 +84,24 @@ Stable Diffusion Generator/
 
 ## Notes for AI Assistants
 For detailed notes and guidelines tailored for AI systems, please refer to the [GUIDELINES.md](./GUIDELINES.md) file.
+
+### Apple Silicon (M1/M2/M3) Acceleration
+If you are using a Mac with Apple Silicon, you can enable GPU acceleration using the Metal Performance Shaders (MPS) backend for PyTorch. This will significantly speed up image generation compared to CPU-only mode.
+
+#### Steps for Apple Silicon Users
+1. (Recommended) Create and activate a new virtual environment:
+   ```bash
+   python3 -m venv env
+   source env/bin/activate
+   ```
+2. Install the Apple Silicon compatible requirements:
+   ```bash
+   pip install -r requirements_mps.txt
+   ```
+   This will install the correct versions of PyTorch and diffusers for MPS support.
+3. Run the project as usual. The generator will automatically use MPS if available.
+
+> **Note:**
+> - You must be using Python 3.8 or newer.
+> - If you see a warning about running on CPU, check your PyTorch installation and that your Mac supports MPS.
+> - For best results, keep your macOS and Python packages up to date.
