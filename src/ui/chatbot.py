@@ -2,6 +2,7 @@ import os
 import logging
 import torch
 import gradio as gr
+import shutil
 
 from PIL import Image, ImageEnhance
 from src.generator.config import MAX_SEED_VALUE, DEFAULT_WIDTH, DEFAULT_HEIGHT
@@ -18,6 +19,19 @@ logging.basicConfig(
     ]
 )
 logging.debug("Logging setup updated to write to file.")
+
+# Clear the output folder at app launch
+output_dir = os.path.join(os.path.dirname(__file__), '../../output')
+if os.path.exists(output_dir):
+    for filename in os.listdir(output_dir):
+        file_path = os.path.join(output_dir, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            logging.warning(f'Failed to delete {file_path}. Reason: {e}')
 
 # Determine the best available device for computation
 def get_device():
@@ -42,13 +56,8 @@ def advanced_chatbot(message, history, negative_prompt, steps, guidance_scale, w
     # Use the message as the main prompt
     prompt = message
 
-    # Handle random seed
-    if use_random_seed:
-        seed = random.randint(0, MAX_SEED_VALUE)
-    elif seed:
-        seed = int(seed)
-    else:
-        seed = None
+    # Always use a random seed, ignore any provided seed value
+    seed = random.randint(0, MAX_SEED_VALUE)
 
     # Prepare init_image if uploaded
     init_image = None
@@ -83,13 +92,11 @@ def advanced_chatbot(message, history, negative_prompt, steps, guidance_scale, w
 # Define advanced controls as tools for the chat
 advanced_tools = [
     gr.Textbox(label="Negative Prompt", value="", interactive=True),
-    gr.Slider(1, 100, value=30, step=1, label="Steps", interactive=True),
-    gr.Slider(1.0, 20.0, value=7.5, step=0.1, label="Guidance Scale", interactive=True),
+    gr.Slider(1, 100, value=10, step=1, label="Steps", interactive=True),
+    gr.Slider(1.0, 20.0, value=5, step=1, label="Guidance Scale", interactive=True),
     gr.Slider(256, 1024, value=512, step=64, label="Width", interactive=True),
     gr.Slider(256, 1024, value=512, step=64, label="Height", interactive=True),
-    gr.Slider(0.0, 1.0, value=0.75, step=0.01, label="Strength", interactive=True),
-    gr.Number(label="Seed", value=None, interactive=True),
-    gr.Checkbox(label="Use Random Seed", value=False, interactive=True),
+    gr.Slider(0.0, 1.0, value=0.8, step=0.01, label="Strength", interactive=True),
     gr.Image(type="filepath", label="Uploaded Image", interactive=True)
 ]
 
@@ -99,8 +106,8 @@ chatbot = gr.ChatInterface(
     additional_inputs=advanced_tools,
     additional_inputs_accordion=(gr.Accordion(label="Advanced Control", open=False)),
     examples=[
-        ["A futuristic cityscape at sunset", "", 10, 7.5, 512, 512, 0.75, None, True, None],
-        ["A cat riding a bicycle", "blurry, distorted", 40, 10.0, 512, 512, 0.7, 12345, False, None]
+        ["A futuristic cityscape at sunset", "", 10, 7.5, 512, 512, 0.75, None],
+        ["A cat riding a bicycle", "blurry, distorted", 40, 10.0, 512, 512, 0.7, None]
     ],
     title="Stable Diffusion Chatbot",
     description="Chat with the Stable Diffusion bot! Type your prompt and optionally adjust advanced parameters using the controls below."

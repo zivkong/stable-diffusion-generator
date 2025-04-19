@@ -150,9 +150,9 @@ class StableDiffusionGenerator:
             padded_image.paste(init_image, (paste_x, paste_y))
             init_image = padded_image
 
-        # Ensure minimal changes to the original image by adjusting parameters
-        guidance_scale = 3.0  # Lower value to reduce prompt influence
-        strength = 0.4  # Lower value to preserve more of the original image
+        # Remove forced overwriting of guidance_scale and strength so UI/inputs are respected
+        # guidance_scale = 3.0  # Lower value to reduce prompt influence
+        # strength = 0.4  # Lower value to preserve more of the original image
 
         # Generate the image
         if init_image is not None:
@@ -162,7 +162,7 @@ class StableDiffusionGenerator:
                 num_inference_steps=num_inference_steps,
                 guidance_scale=guidance_scale,
                 image=init_image,
-                strength=strength,  # Use the adjusted strength parameter
+                strength=strength,  # Use the value passed from UI
                 generator=generator
             )
         else:
